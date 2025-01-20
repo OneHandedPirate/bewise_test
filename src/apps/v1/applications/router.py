@@ -1,53 +1,54 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import PositiveInt
+from fastapi import APIRouter, Depends, Query, status
 
-from src.apps.v1.applications.repositories.application_repository import (
-    ApplicationSQLARepository,
-)
 from src.apps.v1.applications.schemas import (
     ApplicationReadSchema,
     ApplicationCreateSchema,
     ApplicationFilterSchema,
 )
+from src.apps.v1.applications.use_cases.create_application import (
+    CreateApplicationUseCaseProtocol,
+    get_create_application_user_case,
+)
+from src.apps.v1.applications.use_cases.get_filtered_list import (
+    GetApplicationsFilteredListUseCaseProtocol,
+    get_application_filtered_list,
+)
 from src.core.schemas import PaginatedResponseSchema
-from src.sqla.db.db_service import db_service
 
 
 router: APIRouter = APIRouter(prefix="/applications", tags=["applications"])
 
 
-@router.post("", response_model=ApplicationReadSchema)
+@router.post(
+    "", response_model=ApplicationReadSchema, status_code=status.HTTP_201_CREATED
+)
 async def create_application(
     data: ApplicationCreateSchema,
-    session: Annotated[AsyncSession, Depends(db_service.get_async_session)],
+    create_application_use_case: Annotated[
+        CreateApplicationUseCaseProtocol, Depends(get_create_application_user_case)
+    ],
 ) -> ApplicationReadSchema:
     """Create new Application"""
-    return await ApplicationSQLARepository(session=session).create(data)
+    return await create_application_use_case.create(data)
 
 
-@router.get(
-    "/filter",
-    response_model=PaginatedResponseSchema[ApplicationReadSchema]
-)
+@router.get("/filter", response_model=PaginatedResponseSchema[ApplicationReadSchema])
 async def filter_by_user_name(
-    session: Annotated[AsyncSession, Depends(db_service.get_async_session)],
-    page: PositiveInt = Query(default=1),
-    page_size: PositiveInt = Query(default=20),
+    application_filtered_list_use_case: Annotated[
+        GetApplicationsFilteredListUseCaseProtocol,
+        Depends(get_application_filtered_list),
+    ],
+    page: int = Query(default=1, gt=0),
+    page_size: int = Query(default=20, gt=0),
     user_name: str = Query(default=None),
 ) -> PaginatedResponseSchema[ApplicationReadSchema]:
     """
     Paginated Applications list,
-    user_name filter is optional and case-sensitive
+    user_name query parameter is optional and case-sensitive
     """
     filter_schema = ApplicationFilterSchema(
-        page_size=page_size,
-        page=page,
-        user_name=user_name
+        page_size=page_size, page=page, user_name=user_name
     )
-
-    return await ApplicationSQLARepository(session=session).filter_by_username(
-        filter_schema
-    )
+    return await application_filtered_list_use_case.get_filtered_list(filter_schema)

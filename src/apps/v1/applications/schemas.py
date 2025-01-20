@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -10,6 +11,8 @@ class ApplicationReadSchema(BaseModel):
     id: UUID
     user_name: str = Field(max_length=60)
     description: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class ApplicationCreateSchema(BaseModel):

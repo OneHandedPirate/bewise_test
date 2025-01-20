@@ -4,6 +4,7 @@ from typing import Protocol, Self, Annotated
 from fastapi import Depends
 
 from src.apps.v1.healthcheck.services import DBHealthCheckService
+from src.apps.v1.healthcheck.services.kafka_check_service import KafkaHealthCheckService
 from src.apps.v1.healthcheck.services.protocols import BaseHealthCheckServiceProtocol
 from src.apps.v1.healthcheck.schemas import (
     ServiceStatusResponseSchema,
@@ -32,5 +33,8 @@ def get_healthcheck_use_case(
     db_check_service: Annotated[
         BaseHealthCheckServiceProtocol, Depends(DBHealthCheckService)
     ],
+    kafka_check_service: Annotated[
+        BaseHealthCheckServiceProtocol, Depends(KafkaHealthCheckService)
+    ],
 ) -> HealthCheckUseCaseProtocol:
-    return HealthCheckUseCaseImpl(db_check_service)
+    return HealthCheckUseCaseImpl(db_check_service, kafka_check_service)

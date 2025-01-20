@@ -11,7 +11,7 @@ BASE_DIR: Path = Path(__file__).parent.parent.parent
 class DBConfig(BaseModel):
     user: str = "user"
     password: str = "password"
-    host: str = "localhost"
+    host: str = "0.0.0.0"
     port: int = 5432
     name: str = "db_name"
     provider: str = "postgresql+asyncpg"
@@ -35,7 +35,7 @@ class DBConfig(BaseModel):
 
 
 class GunicornConfig(BaseModel):
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 8000
     workers: int = 4
     timeout: int = 900
@@ -78,9 +78,17 @@ class CorsConfig(BaseModel):
 
 
 class DevConfig(BaseModel):
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 8000
     reload: bool = True
+
+
+class KafkaConfig(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 9092
+    topic_name: str = "test-topik"
+
+    zookeeper_port: int = 2181
 
 
 class Settings(BaseSettings):
@@ -89,6 +97,7 @@ class Settings(BaseSettings):
     fastapi: FastApiConfig = FastApiConfig()
     cors: CorsConfig = CorsConfig()
     dev: DevConfig = DevConfig()
+    kafka: KafkaConfig = KafkaConfig()
 
     model_config = SettingsConfigDict(
         env_file=f"{BASE_DIR}/.env",
