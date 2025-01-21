@@ -41,7 +41,7 @@ async def filter_by_user_name(
         Depends(get_application_filtered_list),
     ],
     page: int = Query(default=1, gt=0),
-    page_size: int = Query(default=20, gt=0),
+    page_size: int = Query(default=20, gt=0, le=150),
     user_name: str = Query(default=None),
 ) -> PaginatedResponseSchema[ApplicationReadSchema]:
     """
